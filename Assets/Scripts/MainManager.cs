@@ -12,6 +12,7 @@ public class MainManager : MonoBehaviour
 
     public Text ScoreText;
     public GameObject GameOverText;
+    public Text BestScoreText;
     
     private bool m_Started = false;
     private int m_Points;
@@ -36,6 +37,15 @@ public class MainManager : MonoBehaviour
                 brick.onDestroyed.AddListener(AddPoint);
             }
         }
+
+        BestScoreText.text = "Best score : ";
+        if (ScoreManager.Manager.HighScores.Count > 0)
+            BestScoreText.text += ScoreManager.Manager.HighScores[0].Points + " (" + ScoreManager.Manager.HighScores[0].PlayerName + ")";
+        else
+            BestScoreText.text += " None";
+
+        // Just to update the initial display of the player's name
+        AddPoint(0);
     }
 
     private void Update()
@@ -60,17 +70,31 @@ public class MainManager : MonoBehaviour
                 SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
             }
         }
+
+        // Escape to back to Menu" works even in ongoing game
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            SceneManager.LoadScene("Menu");
+        }
     }
 
     void AddPoint(int point)
     {
         m_Points += point;
         ScoreText.text = $"Score : {m_Points}";
+        if ((ScoreManager.Manager.CurrentPlayerName != null) && (ScoreManager.Manager.CurrentPlayerName != ""))
+        {
+            ScoreText.text += " (" + ScoreManager.Manager.CurrentPlayerName + ")";
+        }
     }
 
     public void GameOver()
     {
-        m_GameOver = true;
-        GameOverText.SetActive(true);
+        // Load menu scene to entry player's name if it is a new Highscore, otherwise, stay here in "game over" state.
+        if (!ScoreManager.Manager.CreateNewScore(m_Points))
+        {
+            m_GameOver = true;
+            GameOverText.SetActive(true);
+        }
     }
 }
